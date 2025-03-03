@@ -1,0 +1,28 @@
+{
+  "name": "eagle-reports-pdf-extractor",
+  "type": "javascript",
+  "workers_dev": false,
+  "compatibility_date": "2025-02-28",
+  "main": "worker.js",
+  "compatibility_flags": [
+    "nodejs_compat"
+  ],
+  "vars": {
+    "EAGLE_RAG_ID_STRING": "PROGRAMNAME:RAG",
+    "EAGLE_RCAD_ID_STRING": "PRELIMINARYPAGEFORCREDITAUTHORIZATIONDETAILREPORT",
+    "EAGLE_RCK_ID_STRING": "Doc.#Cust#JobName",
+    "EAGLE_RDJ_ID_STRING": "PROGRAM-NAME:RDJ",
+    "EAGLE_RDS_ID_STRING": "PRELIMINARYPAGEFORDAILYSALESTOTALSREPORT",
+    "EAGLE_RTX_ID_STRING": "PROGRAM-NAME:RTX",
+    "MS_CLIENT_ID": "03bb7556-bcb3-4e8c-85e5-127617ed498f",
+    "MS_TENANT_ID": "a823dd9a-55ce-46e7-bbf6-c7aaba26e65b",
+    "SHAREPOINT_SITE_NAME": "LumberTradersSalesJournal",
+    "SHAREPOINT_DRIVE_NAME": "Documents",
+    "SHAREPOINT_STORE_FOLDER_NAMES": "HBS"
+  },
+  "triggers": {
+    "crons": [
+      "0 13 * * *"
+    ] 
+  }
+}
