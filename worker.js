@@ -53,104 +53,147 @@ export default {
         }
       }
     })());
+  },
 
-    // Parse the read files
-    /**
-    const eaglePDFParse = new EaglePDFParse(env);
-    */
-  }
+  async fetch(request, env, ctx) {
+    const url = new URL(request.url);
+    const performRerun = url.searchParams.get("performRerun");
+    const dateas = url.searchParams.get("dateas");
+    const storeCode = url.searchParams.get("storeCode");
+
+    // If we have the "?performRerun=true&dateas=yyyy-mm-dd" parameters, do something special:
+    if (performRerun === "true" && dateas && storeCode) {
+        ctx.waitUntil((async () => {
+            //Validate dateas format should be yyyy-mm-dd
+            const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+            if (!dateRegex.test(dateas)) {
+                console.error('Invalid date format.');
+                return new Response('Invalid date format.', { status: 400 });
+            }
+
+            for (const STORE_CODE of (env.SHAREPOINT_STORE_FOLDER_NAMES).split(',')) {
+                if (STORE_CODE !== storeCode) {
+                    continue;
+                }
+        
+                // Folder path in format STORE_CODE/Daily Reports/yyyy-mm-dd
+                // Adjust date from server time (UTC) to Pacific Time and subtract 1 day
+                const reportDate = dateas;
+                const folderPath = `${STORE_CODE}/Daily Reports/${reportDate}`;
+            
+                try {
+                    let microsoftGraph = new MicrosoftGraph(env, folderPath);
+                    let files = await microsoftGraph.listFiles('Raw Files');
+                    let importantPrintables = [];
+                    let reportableDatas = {};
+                    for (let file of files.value) {
+                        if (file.folder) {
+                            continue;
+                        }
+        
+                        let fileContent = await microsoftGraph.downloadFile(file);
+                        let eaglePDFParse = new EaglePDFParse(env);
+                        const { importantPages, reportType, reportableData } = await eaglePDFParse.parseBuffer(Buffer.from(fileContent));
+                        if (!importantPages || importantPages.length === 0) {
+                            console.error('No important pages found in the PDF.');
+                            continue;
+                        }
+        
+                        const pdfData = await eaglePDFParse.extractPages(Buffer.from(fileContent), importantPages);
+                        const filename = `${reportType.replace('Eagle', '')}_${reportDate.replaceAll('-','')}_${generateShortId()}.pdf`;
+        
+                        // Upload the whole file to the 'Tagged Documents' folder
+                        await microsoftGraph.uploadFile(filename, 'Tagged Documents', fileContent);
+        
+                        // Add the important pages to the list
+                        importantPrintables.push(pdfData);
+                        reportableDatas[filename] = reportableData;
+                    }
+        
+                    // Create a new PDF with only the important pages
+                    let eaglePDFParse = new EaglePDFParse(env);
+                    await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', await eaglePDFParse.mergePDFs(importantPrintables));
+        
+                    // Create a JSON file with the reportable data
+                    await microsoftGraph.uploadFile('ReportableData.json', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));
+                } catch (error) {
+                    console.error('Unexpected error:', error);
+                    process.exit(1);
+                }
+            }
+        })());
+
+      return new Response(`Rerun triggered for date: ${dateas}`, {
+        headers: { "Content-Type": "text/plain" },
+      });
+    }
+
+    // Otherwise, return a simple HTML page with embedded CSS and JS
+    const html = `
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Rerun Page</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2em;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      label, button {
+        display: inline-block;
+        margin-top: 1em;
+      }
+      input[type="date"] {
+        margin-left: 1em;
+      }
+        input[type="text"] {
+        margin-left: 1em;
+      }
+      .notice {
+        margin-top: 2em;
+        font-style: italic;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Trigger Rerun</h1>
+    <label for="dateInput">Choose Date:</label>
+    <input type="date" id="dateInput"/>
+    <input type="text" id="storeCodeInput" placeholder="Store Code (Subfolder)"/>
+
+    <button onclick="triggerRerun()">Perform Rerun</button>
+
+    <div class="notice">
+      <p>Select a date and click the button to rerun for that date.</p>
+    </div>
+
+    <script>
+      async function triggerRerun() {
+        const dateVal = document.getElementById("dateInput").value;
+        const storeCode = document.getElementById("storeCodeInput").value;
+        if (!dateVal || !storeCode) {
+          alert("Please select a date first.");
+          return;
+        }
+        // Send a GET request with the required parameters
+        const response = await fetch(\`/?performRerun=true&dateas=\${dateVal}\&storeCode=\${storeCode}\`);
+        const text = await response.text();
+        alert(text);
+      }
+    </script>
+  </body>
+</html>
+    `;
+
+    return new Response(html, {
+      headers: { "Content-Type": "text/html; charset=utf-8" },
+    });
+  },
 }
 
 function generateShortId() {
     return Math.random().toString(36).substring(2, 6);
 }
-
-async function downloadAndReuploadFile(accessToken, driveId, folderPath) {
-  try {
-      // Step 1: List files in the folder
-      const folderEncoded = encodeURIComponent(folderPath);
-      const filesResponse = await fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${folderEncoded}:/children`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${accessToken}` }
-      });
-
-      if (!filesResponse.ok) {
-          console.error('Error listing files:', await filesResponse.text());
-          return;
-      }
-
-      const files = await filesResponse.json();
-      if (files.value.length === 0) {
-          console.log('No files found in the directory.');
-          return;
-      }
-
-      // Step 2: Pick the first file
-      const file = files.value[0]; // Modify as needed
-      const fileId = file.id;
-      const fileName = file.name;
-      console.log(`Downloading file: ${fileName}`);
-
-      // Step 3: Download the file
-      const downloadResponse = await fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/items/${fileId}/content`, {
-          method: 'GET',
-          headers: { Authorization: `Bearer ${accessToken}` }
-      });
-
-      if (!downloadResponse.ok) {
-          console.error('Error downloading file:', await downloadResponse.text());
-          return;
-      }
-
-      const fileBuffer = await downloadResponse.arrayBuffer();
-      await fs.writeFile(fileName, Buffer.from(fileBuffer));
-      console.log(`File downloaded locally as: ${fileName}`);
-
-      // Step 4: Rename the file with the current date
-      const today = new Date().toISOString().split('T')[0]; // YYYY-MM-DD
-      const newFileName = `${today}_${fileName}`;
-      await fs.rename(fileName, newFileName);
-      console.log(`File renamed to: ${newFileName}`);
-
-      // Step 5: Reupload the file
-      const fileData = await fs.readFile(newFileName);
-
-      const uploadResponse = await fetch(`https://graph.microsoft.com/v1.0/drives/${driveId}/root:/${folderEncoded}/${newFileName}:/content`, {
-          method: 'PUT',
-          headers: {
-              Authorization: `Bearer ${accessToken}`,
-              'Content-Type': 'application/octet-stream'
-          },
-          body: fileData
-      });
-
-      if (!uploadResponse.ok) {
-          console.error('Error uploading file:', await uploadResponse.text());
-          return;
-      }
-
-      console.log(`File reuploaded successfully as: ${newFileName}`);
-
-  } catch (error) {
-      console.error('Unexpected error:', error);
-  }
-}
-
-(async () => {
-  env.SHAREPOINT_STORE_FOLDER_NAMES.split(',').forEach(async (STORE_CODE) => {
-    // Folder path in format STORE_CODE/Daily Reports/yyyy-mm-dd
-    // Adjust date from server time (UTC) to Pacific Time
-    const folderPath = `${STORE_CODE}/Daily Reports/${new Date(new Date().getTime() - 8 * 60 * 60 * 1000).toISOString().split('T')[0]}`;
-
-    try {
-        const accessToken = await getAccessToken();
-        const siteId = await getSiteId(accessToken);
-        const driveId = await getDriveId(accessToken, siteId);
-        await listFiles(accessToken, driveId);
-        await downloadAndReuploadFile(accessToken, driveId, folderPath);
-    } catch (error) {
-        console.error('Unexpected error:', error);
-        process.exit(1);
-    }
-  });
-})();
