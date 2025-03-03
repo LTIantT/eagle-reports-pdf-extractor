@@ -22,5 +22,9 @@
     "crons": [
       "0 13 * * *"
     ] 
+  }, 
+  "observability": {
+    "enabled": true,
+    "head_sampling_rate": 1
   }
 }
