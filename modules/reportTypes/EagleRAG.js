@@ -7,6 +7,10 @@ export default class EagleRAG extends EagleReport {
   }
 
   getImportantPages(pdfData) {
+    if (this.isFirstPageOriginalPreliminary(pdfData)) {
+      return [2];
+    }
+    
     return [1];
   }
 

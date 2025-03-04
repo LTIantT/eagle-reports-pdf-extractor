@@ -8,7 +8,14 @@ export default class EagleRCK extends EagleReport {
 
   getImportantPages(pdfData) {
     // Return all pages
-    return Array.from(Array(pdfData.Pages.length).keys());
+    let pages =  Array.from(Array(pdfData.Pages.length).keys());
+
+    // Remove the first page if it is a preliminary page
+    if (this.isFirstPageOriginalPreliminary(pdfData)) {
+      pages.shift();
+    }
+
+    return pages;
   }
 
   getReportableData(pdfData) {

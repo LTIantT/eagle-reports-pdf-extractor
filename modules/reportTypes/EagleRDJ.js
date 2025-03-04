@@ -13,8 +13,9 @@ export default class EagleRDJ extends EagleReport {
     importantPages.push(this.locatePageByString(pdfData, 'TOTALS FOR STORE', importantPages[0] + 1));
 
     // Push the page number of all pages before the 'TOTALS FOR STORE' page (skip first page at idx = 0)
+    let isFirstPageOriginalPreliminary = this.isFirstPageOriginalPreliminary(pdfData) ? 1 : 0;
     let transactionTotalsPage = importantPages[1];
-    for (let i = 1; i < transactionTotalsPage; i++) {
+    for (let i = (1  + isFirstPageOriginalPreliminary); i < transactionTotalsPage; i++) {
       importantPages.push(i);
     }
 
@@ -44,7 +45,7 @@ export default class EagleRDJ extends EagleReport {
 
     // Convert page text into a string
     const firstPageText = firstPage.Texts.map(textObj => decodeURIComponent(textObj.R[0].T)).join(' ').replace(/\s+/g, '');
-    
+
     // Search for the string
     const found = firstPageText.includes(this.idString);
     

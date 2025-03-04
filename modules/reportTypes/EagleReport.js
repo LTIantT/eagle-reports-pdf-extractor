@@ -62,4 +62,27 @@ export class EagleReport {
       return null;
     }
   }
+
+  // Return true if **ORIGINAL** is found on the first page
+  isFirstPageOriginalPreliminary(pdfData) {
+    if (!pdfData?.Pages?.length) {
+      console.error('No pages found in the PDF.');
+      return null;
+    }
+
+    const firstPage = pdfData.Pages[0];
+    const firstPageText = firstPage.Texts
+      .map(textObj => decodeURIComponent(textObj?.R?.[0]?.T || ''))
+      .join(' ')
+      .replace(/\s+/g, '')
+      .trim();
+
+    const found = firstPageText.includes('**ORIGINAL**');
+
+    if (found) {
+      return true;
+    } else {
+      return false;
+    }
+  }
 }

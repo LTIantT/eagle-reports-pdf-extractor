@@ -9,6 +9,10 @@ export default class EagleRTX extends EagleReport {
   getImportantPages(pdfData) {
     // Return all pages
     let pages = Array.from(Array(pdfData.Pages.length).keys());
+
+    if (this.isFirstPageOriginalPreliminary(pdfData)) {
+      pages.shift();
+    }
   
     // Remove the first page
     pages.shift();

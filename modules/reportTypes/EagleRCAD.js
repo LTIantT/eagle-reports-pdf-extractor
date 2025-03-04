@@ -9,6 +9,12 @@ export default class EagleRCAD extends EagleReport {
   getImportantPages(pdfData) {
     // Return all pages
     let pages = Array.from(Array(pdfData.Pages.length).keys());
+
+    // Set the preliminary page flag if '**ORIGINAL**' is found on first page
+    let preliminaryPage = this.isFirstPageOriginalPreliminary(pdfData);
+    if (preliminaryPage) {
+      pages.shift();
+    }
   
     // Remove the first page
     pages.shift();
