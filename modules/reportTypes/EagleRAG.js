@@ -10,12 +10,12 @@ export default class EagleRAG extends EagleReport {
     if (this.isFirstPageOriginalPreliminary(pdfData)) {
       return [2];
     }
-    
+
     return [1];
   }
 
   getReportableData(pdfData) {
-    let arTotalPage = this.locatePageByString(pdfData, 'BALANCE FORWARD AND OPEN ITEM ACCOUNTS');
+    let arTotalPage = this.locatePageByString(pdfData, 'BALANCEFORWARDANDOPENITEMACCOUNTS', 0, {removeSpaces: true});
     let arTotal = this.locateNumericValue(pdfData, arTotalPage, 'ACCOUNTS RECEIVABLE');
     return {
       arTotal

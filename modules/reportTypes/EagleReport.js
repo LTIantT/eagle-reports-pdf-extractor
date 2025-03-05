@@ -1,16 +1,19 @@
 export class EagleReport {
-  locatePageByString(pdfData, searchString, offset = 0) {
+  locatePageByString(pdfData, searchString, offset = 0, options = {}) {
     if (!pdfData?.Pages?.length) {
       console.error('No pages found in the PDF.');
       return null;
     }
+
+    // Add new option parameters here
+    let { removeSpaces } = options;
 
     for (let i = offset; i < pdfData.Pages.length; i++) {
       const page = pdfData.Pages[i];
       const pageText = page.Texts
         .map(textObj => decodeURIComponent(textObj?.R?.[0]?.T || ''))
         .join(' ')
-        .replace(/\s+/g, ' ')
+        .replace(/\s+/g, removeSpaces ? '' : ' ')
         .trim(); // Trim for better accuracy
 
       if (pageText.includes(searchString)) {
@@ -34,7 +37,7 @@ export class EagleReport {
       return null;
     }
 
-    const page = pdfData.Pages[pageNumber - 1];
+    const page = pdfData.Pages[pageNumber];
 
     const pageText = page.Texts
       .map(textObj => decodeURIComponent(textObj?.R?.[0]?.T || ''))
