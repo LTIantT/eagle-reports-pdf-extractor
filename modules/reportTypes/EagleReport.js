@@ -88,4 +88,25 @@ export class EagleReport {
       return false;
     }
   }
+
+  getPageText(pdfData, pageNumber) {
+    if (!pdfData?.Pages?.length) {
+      console.error('No pages found in the PDF.');
+      return null;
+    }
+
+    if (pageNumber < 0 || pageNumber >= pdfData.Pages.length) {
+      console.error('Invalid page number.');
+      return null;
+    }
+
+    const page = pdfData.Pages[pageNumber];
+    const pageText = page.Texts
+      .map(textObj => decodeURIComponent(textObj?.R?.[0]?.T || ''))
+      .join('')
+      .replace(/\s+/g, '')
+      .trim();
+
+    return pageText;
+  }
 }

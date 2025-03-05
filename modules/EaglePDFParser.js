@@ -6,8 +6,8 @@ import { EagleRAG, EagleRCAD, EagleRCK, EagleRDJ, EagleRTX, EagleRDS } from './r
 import IdentifyReport from './reportTypes/IdentifyReport.js';
 
 export default class EaglePDFParser {
-  constructor(env) {
-    this.env = env;
+  constructor(idStringsObject) {
+    this.idStrings = idStringsObject;
   }
 
   /**
@@ -153,7 +153,7 @@ export default class EaglePDFParser {
    */
   async #processPDFData(pdfData, resolve) {
     // Identify the report type
-    const reportType = IdentifyReport(this.env, pdfData);
+    const reportType = IdentifyReport(this.idStrings, pdfData);
     console.log(`Report type: ${reportType}`);
 
     if (!reportType) {
@@ -185,17 +185,17 @@ export default class EaglePDFParser {
   #getHandlerForReportType(reportType) {
     switch (reportType) {
       case 'EagleRAG':
-        return new EagleRAG(this.env.EAGLE_RAG_ID_STRING);
+        return new EagleRAG(this.idStrings.EAGLE_RAG_ID_STRING);
       case 'EagleRCAD':
-        return new EagleRCAD(this.env.EAGLE_RCAD_ID_STRING);
+        return new EagleRCAD(this.idStrings.EAGLE_RCAD_ID_STRING);
       case 'EagleRCK':
-        return new EagleRCK(this.env.EAGLE_RCK_ID_STRING);
+        return new EagleRCK(this.idStrings.EAGLE_RCK_ID_STRING);
       case 'EagleRDJ':
-        return new EagleRDJ(this.env.EAGLE_RDJ_ID_STRING);
+        return new EagleRDJ(this.idStrings.EAGLE_RDJ_ID_STRING);
       case 'EagleRTX':
-        return new EagleRTX(this.env.EAGLE_RTX_ID_STRING);
+        return new EagleRTX(this.idStrings.EAGLE_RTX_ID_STRING);
       case 'EagleRDS':
-        return new EagleRDS(this.env.EAGLE_RDS_ID_STRING);
+        return new EagleRDS(this.idStrings.EAGLE_RDS_ID_STRING);
       default:
         console.warn('Unknown report type.');
         return null;
