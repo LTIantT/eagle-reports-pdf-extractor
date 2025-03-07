@@ -38,7 +38,11 @@ export default {
 
                 // Add the important pages to the list
                 importantPrintables.push(pdfData);
-                reportableDatas[filename] = reportableData;
+
+                // If reportable data is present in the file, push that to the reportableDatas object
+                if (reportableData) {
+                  reportableDatas[filename] = reportableData;
+                }
             }
 
             // Create a new PDF with only the important pages
@@ -46,7 +50,7 @@ export default {
             await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', await eaglePDFParse.mergePDFs(importantPrintables));
 
             // Create a JSON file with the reportable data
-            await microsoftGraph.uploadFile('ReportableData.json', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));
+            await microsoftGraph.uploadFile('ReportableData.json.txt', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));
         } catch (error) {
             console.error('Unexpected error:', error);
             process.exit(1);

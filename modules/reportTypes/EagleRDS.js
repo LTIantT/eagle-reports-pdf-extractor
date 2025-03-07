@@ -1,4 +1,5 @@
 import { EagleReport } from './EagleReport.js';
+import { parsePaidOutBlock } from '../helpers/parsePaidOutBlock.js';
 
 export default class EagleRDS extends EagleReport {
   constructor(idStringsObject) {
@@ -22,7 +23,27 @@ export default class EagleRDS extends EagleReport {
   }
 
   getReportableData(pdfData) {
-    return null;
+    let transactionsTotalPage = this.locatePageByString(pdfData, '**PAIDOUTS**', 0, {removeSpaces: true});
+    let paidOuts = parsePaidOutBlock(pdfData.Pages[transactionsTotalPage]);
+
+    let taxableMerchandise = this.locateNumericValue(pdfData, transactionsTotalPage, 'TAXABLE MERCHANDISE');
+    let nonTaxableMerchandise = this.locateNumericValue(pdfData, transactionsTotalPage, 'NON-TAXABLE MERCHANDISE');
+    let salesTax = this.locateNumericValue(pdfData, transactionsTotalPage, 'SALES TAX');
+    let orderDepositsTaken = this.locateNumericValue(pdfData, transactionsTotalPage, 'ORDER DEPOSITS TAKEN');
+    let giftCardsUsed = this.locateNumericValue(pdfData, transactionsTotalPage, 'In-Store Gift Card');
+    
+    let departmentTotalsPage = this.locatePageByString(pdfData, 'DEPARTMENT TOTALS', 0, {removeSpaces: true});
+    let giftCardSales = this.locateNumericValue(pdfData, departmentTotalsPage, 'GIFT CARD');
+    
+    return {
+      paidOuts,
+      taxableMerchandise,
+      nonTaxableMerchandise,
+      salesTax,
+      orderDepositsTaken,
+      giftCardsUsed,
+      giftCardSales
+    };
   }
 
   id (pdfData) {

@@ -31,40 +31,63 @@ export class EagleReport {
       console.error('No pages found in the PDF.');
       return null;
     }
-
+  
     if (pageNumber < 1 || pageNumber > pdfData.Pages.length) {
       console.error('Invalid page number.');
       return null;
     }
-
+  
     const page = pdfData.Pages[pageNumber];
-
+  
+    // Combine all text from the page into one string, separating chunks with spaces:
     const pageText = page.Texts
       .map(textObj => decodeURIComponent(textObj?.R?.[0]?.T || ''))
       .join(' ')
       .replace(/\s+/g, ' ')
       .trim();
-
+  
     console.log(`Extracted Page Text: "${pageText}"`);
-
+  
+    // If the search string is not found at all, bail out
     if (!pageText.includes(searchString)) {
       console.log(`String NOT found on page ${pageNumber}.`);
       return null;
     }
-
-    // Improved regex: Extracts numeric values more flexibly, ensuring decimals and spacing are handled
-    const regex = new RegExp(`${searchString}\\s*([0-9,]+(?:\\.[0-9]{2})?)`);
+  
+    /**
+     * Regex Explanation:
+     * 
+     * 1. We build a dynamic pattern with the user-defined "searchString" in front.
+     * 2. "\\s*" - allows optional spaces between the search term and the number.
+     * 3. "([0-9,]+\\.[\\s]*[0-9]{2})" - captures:
+     *    - one or more digits or commas ([0-9,]+)
+     *    - a literal dot (\\.)
+     *    - optional whitespace ([\\s]*)
+     *    - exactly 2 digits ([0-9]{2})
+     * 
+     * So it will match patterns like:
+     *   31,708.80
+     *   31,708. 80
+     *   31708. 80
+     * etc.
+     */
+    const regex = new RegExp(`${searchString}\\s*([0-9,]+\\.[\\s]*[0-9]{2})`);
+  
     const match = pageText.match(regex);
-
     if (match) {
-      const numericValue = match[1].replace(/,/g, ''); // Remove commas for parsing (e.g., "1,234.56")
-      console.log(`Numeric value of ${searchString} found: ${numericValue}`);
-      return parseFloat(numericValue);
+      // Remove all spaces (in case there's a space between dot and digits)
+      // and remove commas for parseFloat
+      let numericValue = match[1]
+        .replace(/\s+/g, '')   // remove all spaces
+        .replace(/,/g, '');    // remove commas (e.g. 31,708 => 31708)
+  
+      console.log(`Numeric value of "${searchString}" found: ${numericValue}`);
+      return parseFloat(numericValue); // e.g. "31708.80" => 31708.8
     } else {
       console.log('Numeric value NOT found.');
       return null;
     }
-  }
+  }  
 
   // Return true if **ORIGINAL** is found on the first page
   isFirstPageOriginalPreliminary(pdfData) {
