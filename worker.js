@@ -26,18 +26,18 @@ export default {
                 let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
                 const { importantPages, reportType, reportableData } = await eaglePDFParse.parseBuffer(Buffer.from(fileContent));
                 if (!importantPages || importantPages.length === 0) {
-                    console.error('No important pages found in the PDF.');
-                    continue;
+                    console.log('No important pages found in the PDF.');
+                } else {
+                  const pdfData = await eaglePDFParse.extractPages(Buffer.from(fileContent), importantPages);
+                  
+                  // Add the important pages to the list
+                  importantPrintables.push(pdfData);
                 }
 
-                const pdfData = await eaglePDFParse.extractPages(Buffer.from(fileContent), importantPages);
                 const filename = `${reportType.replace('Eagle', '')}_${reportDate.replaceAll('-','')}_${generateShortId()}.pdf`;
 
                 // Upload the whole file to the 'Tagged Documents' folder
                 await microsoftGraph.uploadFile(filename, 'Tagged Documents', fileContent);
-
-                // Add the important pages to the list
-                importantPrintables.push(pdfData);
 
                 // If reportable data is present in the file, push that to the reportableDatas object
                 if (reportableData) {
@@ -91,33 +91,31 @@ export default {
                     let importantPrintables = [];
                     let reportableDatas = {};
                     for (let file of files.value) {
-                        if (file.folder) {
-                            continue;
-                        }
-        
-                        let fileContent = await microsoftGraph.downloadFile(file);
-                        let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
-                        try {
-                            const { importantPages, reportType, reportableData } = await eaglePDFParse.parseBuffer(Buffer.from(fileContent));
+                      if (file.folder) {
+                          continue;
+                      }
+      
+                      let fileContent = await microsoftGraph.downloadFile(file);
+                      let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
+                      const { importantPages, reportType, reportableData } = await eaglePDFParse.parseBuffer(Buffer.from(fileContent));
+                      if (!importantPages || importantPages.length === 0) {
+                          console.log('No important pages found in the PDF.');
+                      } else {
+                        const pdfData = await eaglePDFParse.extractPages(Buffer.from(fileContent), importantPages);
                         
-                            if (!importantPages || importantPages.length === 0) {
-                                console.error('No important pages found in the PDF.');
-                                continue;
-                            }
-            
-                            const pdfData = await eaglePDFParse.extractPages(Buffer.from(fileContent), importantPages);
-                            const filename = `${reportType.replace('Eagle', '')}_${reportDate.replaceAll('-','')}_${generateShortId()}.pdf`;
-            
-                            // Upload the whole file to the 'Tagged Documents' folder
-                            await microsoftGraph.uploadFile(filename, 'Tagged Documents', fileContent);
-            
-                            // Add the important pages to the list
-                            importantPrintables.push(pdfData);
-                            reportableDatas[filename] = reportableData;
-                        } catch (error) {
-                            console.error('Error parsing PDF:', error);
-                            continue;
-                        }
+                        // Add the important pages to the list
+                        importantPrintables.push(pdfData);
+                      }
+      
+                      const filename = `${reportType.replace('Eagle', '')}_${reportDate.replaceAll('-','')}_${generateShortId()}.pdf`;
+      
+                      // Upload the whole file to the 'Tagged Documents' folder
+                      await microsoftGraph.uploadFile(filename, 'Tagged Documents', fileContent);
+      
+                      // If reportable data is present in the file, push that to the reportableDatas object
+                      if (reportableData) {
+                        reportableDatas[filename] = reportableData;
+                      }
                     }
         
                     // Create a new PDF with only the important pages

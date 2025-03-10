@@ -165,11 +165,16 @@ export default class EaglePDFParser {
     const handler = this.#getHandlerForReportType(reportType);
     if (handler) {
       console.log(`Parsing ${reportType} report...`);
-      const importantPages = handler.getImportantPages(pdfData);
-      const reportableData = handler.getReportableData(pdfData);
+      try {
+        const importantPages = handler.getImportantPages(pdfData);
+        const reportableData = handler.getReportableData(pdfData);
 
-      // Do something with masterReportPages if needed
-      return resolve({ importantPages, reportType, reportableData });
+        // Do something with masterReportPages if needed
+        return resolve({ importantPages, reportType, reportableData });        
+      } catch (error) {
+        console.error('Error parsing report:', error);
+        return resolve({importantPages: null, reportType, reportableData: null});
+      }
     } else {
       console.error('No handler found for the report type.');
     }

@@ -19,6 +19,11 @@ export default class EagleRCK extends EagleReport {
 
     // This report has a blank page at the end (maybe)
     let lastPage = pages[pages.length - 1];
+    if ((pages.length - 1) < 0) {
+      console.error('Invalid page number.');
+      return null;
+    }
+
     let lastPageText = this.getPageText(pdfData, lastPage);
     if (lastPageText === '') {
       pages.pop();
