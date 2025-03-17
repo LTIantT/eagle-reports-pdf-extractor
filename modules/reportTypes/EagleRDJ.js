@@ -1,11 +1,13 @@
+import { PDFDict, PDFField } from 'pdf-lib';
 import { EagleReport } from './EagleReport.js';
 
 export default class EagleRDJ extends EagleReport {
-  constructor(idStringsObject) {
+  constructor(idStringsObject, reportableDataVariables) {
     super();
     let { originalPreliminary, firstPage } = idStringsObject;
     this.ogPrelimIdString = originalPreliminary;
     this.firstPageIdString = firstPage;
+    this.reportableDataVariables = reportableDataVariables;
   }
 
   getImportantPages(pdfData) {
@@ -33,7 +35,62 @@ export default class EagleRDJ extends EagleReport {
   }
 
   getReportableData(pdfData) {
-    return null;
+    let cashTotalsPage = this.locatePageByString(pdfData, 'CASH TOTALS FOR STORE');
+    let totalsPage = this.locatePageByString(pdfData, 'TOTALS FOR STORE', cashTotalsPage + 1);
+
+    let reportableData = [];
+
+    console.log(this.reportableDataVariables);
+
+    if (this.reportableDataVariables) {
+      let envDefinedVariables = Object.keys(this.reportableDataVariables.data);
+      envDefinedVariables = envDefinedVariables.map(x => { return {key: x, fulfilled: false, value: null, ...this.reportableDataVariables.data[`${x}`]} });
+      console.log(envDefinedVariables);
+      envDefinedVariables.forEach(variable => {
+        if (variable.type === "derived") {
+          let dependenciesFulfilled = variable.depends.map(dependency => {
+            return envDefinedVariables.find(x => x.key === dependency).fulfilled;
+          });
+          if (dependenciesFulfilled.every(x => x === true)) {
+            // Calculation is a string that is evaluated
+            switch (variable.calculation) {
+              case "sum":
+                variable.value = variable.depends.slice(1).reduce(
+                  (acc, curr) => acc + (envDefinedVariables.find(x => x.key === curr)?.value || 0),
+                  envDefinedVariables.find(x => x.key === variable.depends[0])?.value || 0
+              );
+              break;
+              case "difference":
+                variable.value = variable.depends.slice(1).reduce(
+                    (acc, curr) => acc - (envDefinedVariables.find(x => x.key === curr)?.value || 0),
+                    envDefinedVariables.find(x => x.key === variable.depends[0])?.value || 0
+                );
+                break;
+              case "product":
+                variable.value = variable.depends.reduce((acc, curr) => acc * envDefinedVariables.find(x => x.key === curr).value, 1);
+                break;
+              case "quotient":
+                variable.value = variable.depends.reduce((acc, curr) => acc / envDefinedVariables.find(x => x.key === curr).value, 1);
+                break;
+              default:
+                console.error(`Calculation type ${variable.calculation} not recognized.`);
+                break;
+            }
+
+            variable.fulfilled = true;
+          }
+        }
+
+        if (variable.type === "locator") {
+          variable.value = this.findNested(pdfData.Pages[totalsPage].Texts.map(x => x.R[0].T).join(''), variable);
+          variable.fulfilled = true;
+        }
+      });
+
+      reportableData = envDefinedVariables.filter(x => x.fulfilled === true).map(x => { return {key: x.key, value: x.value} });
+    }
+
+    return reportableData;
   }
 
   id (pdfData) {

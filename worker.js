@@ -23,7 +23,7 @@ export default {
                 }
 
                 let fileContent = await microsoftGraph.downloadFile(file);
-                let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
+                let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS, env.REPORTABLE_DATA_LOCATORS);
                 const { importantPages, reportType, reportableData } = await eaglePDFParse.parseBuffer(Buffer.from(fileContent));
                 if (!importantPages || importantPages.length === 0) {
                     console.log('No important pages found in the PDF.');
@@ -96,7 +96,7 @@ export default {
                       }
       
                       let fileContent = await microsoftGraph.downloadFile(file);
-                      let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
+                      let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS, env.REPORTABLE_DATA_LOCATORS);
                       const { importantPages, reportType, reportableData } = await eaglePDFParse.parseBuffer(Buffer.from(fileContent));
                       if (!importantPages || importantPages.length === 0) {
                           console.log('No important pages found in the PDF.');
@@ -123,7 +123,7 @@ export default {
                     await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', await eaglePDFParse.mergePDFs(importantPrintables));
         
                     // Create a JSON file with the reportable data
-                    await microsoftGraph.uploadFile('ReportableData.json', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));
+                    await microsoftGraph.uploadFile('ReportableData.json.txt', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));
                 } catch (error) {
                     console.error('Unexpected error:', error);
                     process.exit(1);

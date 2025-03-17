@@ -132,4 +132,77 @@ export class EagleReport {
 
     return pageText;
   }
+
+  findNested(fullText, spec) {
+    console.log("Finding spec:", spec);
+    let text = decodeURIComponent(fullText);
+  
+    // 1) Apply "after" at the current (top) level
+    if (spec.after) {
+      const pos = this.locateStringOrRegex(text, spec.after);
+      if (pos === -1) {
+        return null; // 'after' token not found
+      }
+      text = text.slice(pos);
+    }
+  
+    // 2) If there's a nested spec, process that recursively
+    if (spec.next) {
+      const nestedResult = this.findNested(text, spec.next);
+      console.log('nestedResult:', nestedResult);
+      if (!nestedResult) {
+        return null;
+      }
+      // In this example, if the nested result is array-like, we convert it back into a string.
+      if (Array.isArray(nestedResult)) {
+        text = nestedResult.join(' ');
+      } else {
+        text = String(nestedResult);
+      }
+    }
+  
+    // 3) Apply "before" at the current level
+    if (spec.before) {
+      const beforePos = this.locateStringOrRegex(text, spec.before);
+      if (beforePos !== -1) {
+        text = text.slice(0, beforePos);
+      }
+    }
+  
+    // 4) Finally, if there's a "pattern", we return only the first match
+    if (spec.pattern) {
+      // Construct a RegExp for a single match (no "g" flag)
+      const rx = new RegExp(spec.pattern);
+      const m = rx.exec(text);
+      if (!m) {
+        return null; // No match
+      }
+      // Return capturing group 1 if it exists, else the whole match
+      return m[1] ?? m[0];
+    }
+  
+    // If there's no pattern, just return whatever text remains at this level
+    return text;
+  }
+  
+  /**
+   * Helper function: finds the position in `text` for either a string or regex token.
+   * Returns the index *after* the match (so we can slice forward from there),
+   * or -1 if not found.
+   */
+  locateStringOrRegex(text, token) {
+    if (typeof token === 'string') {
+      const idx = text.indexOf(token);
+      // If found, return the position after the token; else -1
+      return idx === -1 ? -1 : (idx + token.length);
+    } else {
+      // Assume a RegExp
+      const match = text.match(token);
+      if (!match || match.index == null) {
+        return -1;
+      }
+      console.log('match:', match);
+      return match.index + match[0].length;
+    }
+  }
 }
