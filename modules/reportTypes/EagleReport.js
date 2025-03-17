@@ -134,7 +134,7 @@ export class EagleReport {
   }
 
   findNested(fullText, spec) {
-    console.log("Finding spec:", spec);
+    // console.log("Finding spec:", spec);
     let text = decodeURIComponent(fullText);
   
     // 1) Apply "after" at the current (top) level

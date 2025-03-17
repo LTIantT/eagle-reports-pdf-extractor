@@ -40,12 +40,10 @@ export default class EagleRDJ extends EagleReport {
 
     let reportableData = [];
 
-    console.log(this.reportableDataVariables);
-
     if (this.reportableDataVariables) {
       let envDefinedVariables = Object.keys(this.reportableDataVariables.data);
       envDefinedVariables = envDefinedVariables.map(x => { return {key: x, fulfilled: false, value: null, ...this.reportableDataVariables.data[`${x}`]} });
-      console.log(envDefinedVariables);
+      // console.log(envDefinedVariables);
       envDefinedVariables.forEach(variable => {
         if (variable.type === "derived") {
           let dependenciesFulfilled = variable.depends.map(dependency => {
@@ -56,14 +54,14 @@ export default class EagleRDJ extends EagleReport {
             switch (variable.calculation) {
               case "sum":
                 variable.value = variable.depends.slice(1).reduce(
-                  (acc, curr) => acc + (envDefinedVariables.find(x => x.key === curr)?.value || 0),
-                  envDefinedVariables.find(x => x.key === variable.depends[0])?.value || 0
-              );
-              break;
+                  (acc, curr) => acc + (parseFloat(envDefinedVariables.find(x => x.key === curr)?.value) || 0),
+                  parseFloat(envDefinedVariables.find(x => x.key === variable.depends[0])?.value) || 0
+                );
+                break;              
               case "difference":
                 variable.value = variable.depends.slice(1).reduce(
-                    (acc, curr) => acc - (envDefinedVariables.find(x => x.key === curr)?.value || 0),
-                    envDefinedVariables.find(x => x.key === variable.depends[0])?.value || 0
+                  (acc, curr) => acc - (parseFloat(envDefinedVariables.find(x => x.key === curr)?.value) || 0),
+                  parseFloat(envDefinedVariables.find(x => x.key === variable.depends[0])?.value) || 0
                 );
                 break;
               case "product":
@@ -87,10 +85,16 @@ export default class EagleRDJ extends EagleReport {
         }
       });
 
-      reportableData = envDefinedVariables.filter(x => x.fulfilled === true).map(x => { return {key: x.key, value: x.value} });
+      // Build the final reportable data object
+      reportableData = envDefinedVariables
+          .filter(x => x.fulfilled)
+          .reduce((acc, x) => {
+              acc[x.key] = x.value;
+              return acc;
+          }, {});
     }
 
-    return reportableData;
+    return {...(Array.isArray(reportableData) ? Object.assign({}, reportableData) : reportableData)};
   }
 
   id (pdfData) {

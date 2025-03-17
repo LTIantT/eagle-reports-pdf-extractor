@@ -69,6 +69,29 @@
             }
           }
         }
+      },
+      {
+        "report": "EagleRDS",
+        "data": {
+          "taxableMerchandise": {
+            "type": "locator",
+            "after": "TAXABLE MERCHANDISE",
+            "pattern": "([0-9,]+\\s*\\.\\s*[0-9]{2})"
+          },
+          "taxableMerchandiseLessDisc": {
+            "type": "locator",
+            "after": "** SALES TOTALS **",
+            "next": {
+              "after": "TAXABLE MERCH DISC",
+              "pattern": "([0-9,]+\\s*\\.\\s*[0-9]{2})"
+            }
+          },
+          "taxableMerchandiseNet": {
+            "type": "derived",
+            "depends": ["taxableMerchandise", "taxableMerchandiseLessDisc"],
+            "calculation": "difference"
+          }
+        }
       }
     ]
   },

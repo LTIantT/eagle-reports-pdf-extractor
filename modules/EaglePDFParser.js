@@ -191,17 +191,17 @@ export default class EaglePDFParser {
   #getHandlerForReportType(reportType) {
     switch (reportType) {
       case 'EagleRAG':
-        return new EagleRAG(this.idStrings.EAGLE_RAG_ID_STRING);// this.reportableDataVariables.find((x) => x.reportType === 'EagleRAG'));
+        return new EagleRAG(this.idStrings.EAGLE_RAG_ID_STRING);// this.reportableDataVariables.find((x) => x.report === 'EagleRAG'));
       case 'EagleRCAD':
-        return new EagleRCAD(this.idStrings.EAGLE_RCAD_ID_STRING);// this.reportableDataVariables.find((x) => x.reportType === 'EagleRCAD'));
+        return new EagleRCAD(this.idStrings.EAGLE_RCAD_ID_STRING);// this.reportableDataVariables.find((x) => x.report === 'EagleRCAD'));
       case 'EagleRCK':
-        return new EagleRCK(this.idStrings.EAGLE_RCK_ID_STRING);// this.reportableDataVariables.find((x) => x.reportType === 'EagleRCK'));
+        return new EagleRCK(this.idStrings.EAGLE_RCK_ID_STRING);// this.reportableDataVariables.find((x) => x.report === 'EagleRCK'));
       case 'EagleRDJ':
         return new EagleRDJ(this.idStrings.EAGLE_RDJ_ID_STRING, this.reportableDataVariables.find((x) => x.report === 'EagleRDJ'));
       case 'EagleRTX':
-        return new EagleRTX(this.idStrings.EAGLE_RTX_ID_STRING);// this.reportableDataVariables.find((x) => x.reportType === 'EagleRTX'));
+        return new EagleRTX(this.idStrings.EAGLE_RTX_ID_STRING);// this.reportableDataVariables.find((x) => x.report === 'EagleRTX'));
       case 'EagleRDS':
-        return new EagleRDS(this.idStrings.EAGLE_RDS_ID_STRING);// this.reportableDataVariables.find((x) => x.reportType === 'EagleRDS'));
+        return new EagleRDS(this.idStrings.EAGLE_RDS_ID_STRING, this.reportableDataVariables.find((x) => x.report === 'EagleRDS'));
       default:
         console.warn('Unknown report type.');
         return null;
