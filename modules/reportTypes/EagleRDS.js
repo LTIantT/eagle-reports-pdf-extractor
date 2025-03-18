@@ -59,7 +59,7 @@ export default class EagleRDS extends EagleReport {
       envDefinedVariables.forEach(variable => {
           if (variable.type === "locator") {
               variable.value = this.findNested(
-                  pdfData.Pages[transactionsTotalPage].Texts.map(x => x.R[0].T).join(''), 
+                  pdfData.Pages[transactionsTotalPage].Texts.map(x => decodeURIComponent(x?.R?.[0]?.T || '')).join(''), 
                   variable
               );
               variable.value = safeParseFloat(variable.value); // Ensure numerical parsing

@@ -80,7 +80,7 @@ export default class EagleRDJ extends EagleReport {
         }
 
         if (variable.type === "locator") {
-          variable.value = this.findNested(pdfData.Pages[totalsPage].Texts.map(x => x.R[0].T).join(''), variable);
+          variable.value = this.findNested(pdfData.Pages[totalsPage].Texts.map(x => decodeURIComponent(x?.R?.[0]?.T || '')).join(''), variable);
           variable.fulfilled = true;
         }
       });
