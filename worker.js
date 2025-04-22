@@ -77,6 +77,7 @@ export default {
 
             for (const STORE_CODE of (env.SHAREPOINT_STORE_FOLDER_NAMES).split(',')) {
                 if (STORE_CODE !== storeCode) {
+                    console.log(`Skipping store code: ${STORE_CODE} as it does not match the provided store code: ${storeCode}`);
                     continue;
                 }
         
