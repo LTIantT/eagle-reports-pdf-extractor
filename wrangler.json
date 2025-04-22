@@ -18,7 +18,7 @@
     },
     "SHAREPOINT_SITE_NAME": "LumberTradersSalesJournal",
     "SHAREPOINT_DRIVE_NAME": "Documents",
-    "SHAREPOINT_STORE_FOLDER_NAMES": "HBS",
+    "SHAREPOINT_STORE_FOLDER_NAMES": "HBS,AMW and ARES",
     "REPORTABLE_DATA_LOCATORS": [
       {
         "report": "EagleRDJ",
