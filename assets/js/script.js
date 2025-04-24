@@ -40,7 +40,7 @@ function populateFileList() {
       const fileList = document.getElementById("fileList");
       fileList.innerHTML = ""; // Clear previous list
       const li = document.createElement("li");
-      li.innerHTML = `<a href="/R2/${file.key}" download>${file.key.split('/')[file.key.split('/').length - 1]}</a>  - <small style="font-style: italic">Created: ${file.uploaded.split('T')[0]}</small>`;
+      li.innerHTML = `<a href="/R2/${file.key}" download>${file.key.split('/')[file.key.split('/').length - 1]}</a>  - <small style="font-style: italic">(${file.size/1000}kb) - Created: ${file.uploaded.split('T')[0]}</small>`;
       fileList.appendChild(li);
     })
     .catch(error => {
