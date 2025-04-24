@@ -69,6 +69,34 @@ export default {
     const dateas = url.searchParams.get("dateas");
     const storeCode = url.searchParams.get("storeCode");
 
+    // If the request is for the /R2/* endpoint, return the file from R2:
+    if (url.pathname.startsWith('/R2/')) {
+        const filePath = decodeURI(url.pathname.replace('/R2/', ''));
+        console.log(`Fetching file from R2: ${filePath}`);
+        const file = await env.R2.get(filePath);
+        if (!file) {
+            return new Response('File not found.', { status: 404 });
+        }
+        return new Response(file.body, {
+            headers: { "Content-Type": file.httpMetadata.contentType },
+        });
+    }
+
+    // If we have only the ?dateas and ?storeCode parameters return an R2 URL for a file (if it exists):
+    if (dateas && storeCode && !performRerun) {
+        const folderPath = `${storeCode}/Daily Reports/${dateas}`;
+        const fileName = 'ImportantPrintables.pdf';
+        const file = await env.R2.head(`${folderPath}/${fileName}`);
+        if (!file) {
+            return new Response(JSON.stringify({'message': 'File not found.'}), { status: 404 });
+        }
+
+        // Return file object as JSON if exists:
+        return new Response(JSON.stringify(file), {
+            headers: { "Content-Type": "application/json" },
+        });
+    }
+
     // If we have the "?performRerun=true&dateas=yyyy-mm-dd" parameters, do something special:
     if (performRerun === "true" && dateas && storeCode) {
         ctx.waitUntil((async () => {
@@ -145,69 +173,8 @@ export default {
       });
     }
 
-    // Otherwise, return a simple HTML page with embedded CSS and JS
-    const html = `
-<!DOCTYPE html>
-<html>
-  <head>
-    <meta charset="UTF-8"/>
-    <title>Rerun Page</title>
-    <style>
-      body {
-        font-family: sans-serif;
-        padding: 2em;
-        max-width: 600px;
-        margin: 0 auto;
-      }
-      label, button {
-        display: inline-block;
-        margin-top: 1em;
-      }
-      input[type="date"] {
-        margin-left: 1em;
-      }
-        input[type="text"] {
-        margin-left: 1em;
-      }
-      .notice {
-        margin-top: 2em;
-        font-style: italic;
-      }
-    </style>
-  </head>
-  <body>
-    <h1>Trigger Rerun</h1>
-    <label for="dateInput">Choose Date:</label>
-    <input type="date" id="dateInput"/>
-    <input type="text" id="storeCodeInput" placeholder="Store Code (Subfolder)"/>
-
-    <button onclick="triggerRerun()">Perform Rerun</button>
-
-    <div class="notice">
-      <p>Select a date and click the button to rerun for that date.</p>
-    </div>
-
-    <script>
-      async function triggerRerun() {
-        const dateVal = document.getElementById("dateInput").value;
-        const storeCode = document.getElementById("storeCodeInput").value;
-        if (!dateVal || !storeCode) {
-          alert("Please select a date first.");
-          return;
-        }
-        // Send a GET request with the required parameters
-        const response = await fetch(\`/?performRerun=true&dateas=\${dateVal}\&storeCode=\${storeCode}\`);
-        const text = await response.text();
-        alert(text);
-      }
-    </script>
-  </body>
-</html>
-    `;
-
-    return new Response(html, {
-      headers: { "Content-Type": "text/html; charset=utf-8" },
-    });
+    // Otherwise, return a static files
+    return await env.ASSETS.fetch(request);
   },
 }
 

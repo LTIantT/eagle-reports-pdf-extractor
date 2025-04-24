@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <meta charset="UTF-8"/>
+    <title>Rerun Page</title>
+    <style>
+      body {
+        font-family: sans-serif;
+        padding: 2em;
+        max-width: 600px;
+        margin: 0 auto;
+      }
+      label, button {
+        display: inline-block;
+        margin-top: 1em;
+      }
+      input[type="date"] {
+        margin-left: 1em;
+      }
+        input[type="text"] {
+        margin-left: 1em;
+      }
+      .notice {
+        margin-top: 2em;
+        font-style: italic;
+      }
+      select {
+        margin-right: 1em;
+        margin-left: 1em;
+      }
+      #matchingR2Files {
+        margin-top: 2em;
+      }
+      #fileList {
+        list-style-type: none;
+        padding: 0;
+        background-color: gainsboro;
+        border-radius: 5px;
+        padding: 1em;
+        margin-top: 1em;
+        max-height: 200px;
+        overflow-y: auto;
+        min-height: 200px;
+      }
+    </style>
+  </head>
+  <body>
+    <h1>Trigger Rerun</h1>
+    <label for="dateInput">Choose Date:</label>
+    <input type="date" id="dateInput"/>
+    <select id="storeCodeInput">
+      <option value="HBS">HBS</option>
+      <option value="AMW and ARES">AMW and ARES</option>
+    </select>
+
+    <button onclick="triggerRerun()">Perform Rerun</button>
+
+    <div class="notice">
+      <p>Select a date and click the button to rerun for that date.</p>
+    </div>
+
+    <hr style="border: 1px solid black; margin-top: 10px;"/>
+
+    <div id="matchingR2Files">
+      <h2>Matching R2 Files</h2>
+      <small style="font-style: italic;">When you select a date and store above (but before clicking rerun) ImportantPrintables will appear here if present in R2 storage.</small>
+      <small style="font-style: italic;">You may wish to simply download, print, and store that file in SharePoint rather than performing a rerun.</small>
+      <ul id="fileList"></ul>
+    </div>
+    <script src="/js/script.js"></script>
+  </body>
+</html>
