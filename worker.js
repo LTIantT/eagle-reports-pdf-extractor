@@ -47,7 +47,11 @@ export default {
 
             // Create a new PDF with only the important pages
             let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
-            await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', await eaglePDFParse.mergePDFs(importantPrintables));
+            let mergedPDF = await eaglePDFParse.mergePDFs(importantPrintables);
+            await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', mergedPDF);
+
+            // Upload a copy of the merged PDF to the R2 for debugging purposes
+            await env.R2.put(`${folderPath}/ImportantPrintables.pdf`, mergedPDF);
 
             // Create a JSON file with the reportable data
             await microsoftGraph.uploadFile('ReportableData.json.txt', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));
@@ -121,7 +125,11 @@ export default {
         
                     // Create a new PDF with only the important pages
                     let eaglePDFParse = new EaglePDFParse(env.ID_STRINGS);
-                    await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', await eaglePDFParse.mergePDFs(importantPrintables));
+                    let mergedPDF = await eaglePDFParse.mergePDFs(importantPrintables);
+                    await microsoftGraph.uploadFile('ImportantPrintables.pdf', '', mergedPDF);
+
+                    // Upload a copy of the merged PDF to the R2 for debugging purposes
+                    await env.R2.put(`${folderPath}/ImportantPrintables.pdf`, mergedPDF);
         
                     // Create a JSON file with the reportable data
                     await microsoftGraph.uploadFile('ReportableData.json.txt', '', Buffer.from(JSON.stringify(reportableDatas, null, 2)));

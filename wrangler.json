@@ -7,6 +7,12 @@
   "compatibility_flags": [
     "nodejs_compat"
   ],
+  "r2_buckets": [
+    {
+      "bucket_name": "daily-reports",
+      "binding": "R2"
+    }
+  ],
   "vars": {
     "ID_STRINGS": {
       "EAGLE_RAG_ID_STRING": {"originalPreliminary": "SPOOLEDREPORTOF-RAG", "firstPage": "PROGRAMNAME:RAG"},
